@@ -22,8 +22,8 @@
     }
     #circle {
       position: relative;
-      width: 280px;
-      height: 280px;
+      width: 300px;
+      height: 300px;
       border-radius: 50%;
       background: #86a9aa;
       overflow: hidden;
@@ -57,7 +57,7 @@
     #nav button {
       background: none;
       border: none;
-      color: #234;
+      color: #233238;
       font-size: 1rem;
       cursor: pointer;
       padding: 0.5rem 1rem;
@@ -77,42 +77,40 @@
   </div>
 
   <script>
-    // ─── 70 randomly generated dot‐counts between 3 and 13 ─────────────────────────
+    // 70 dot‐counts between 3 and 13 (randomized sequence)
     const questions = [
-      13,4,3,7,6,6,5,4,13,11,
-      4,12,9,3,3,4,6,6,11,12,
-      3,11,6,13,11,9,6,10,12,7,
-      3,5,9,8,7,5,6,8,4,4,
-      9,4,8,8,12,7,3,10,11,4,
-      9,4,11,7,13,12,8,12,6,4,
-      3,13,6,7,4,6,4,9,7,10
+      7,11,4,13,9,5,3,12,6,8,
+      10,3,13,11,4,9,6,7,12,5,
+      8,13,3,10,11,4,7,9,6,12,
+      5,8,13,3,10,11,4,9,7,6,
+      12,5,8,13,3,11,4,10,9,6,
+      7,12,5,8,13,3,11,10,4,9,
+      6,7,12,5,8,13,3,11,10,4
     ];
-    // ──────────────────────────────────────────────────────────────────────────────
 
-    // DOM refs
+    // DOM references
     const circle   = document.getElementById('circle');
     const choices  = document.getElementById('choices');
     const prevBtn  = document.getElementById('prevBtn');
     const nextBtn  = document.getElementById('nextBtn');
     const progress = document.getElementById('progress');
 
-    let current = 0;
-    let dots    = [];
-    let start   = null;
+    let current = 0, dots = [], startTime = null;
 
     function loadQuestion(idx) {
+      // reset
       circle.innerHTML = '';
       choices.innerHTML = '';
       prevBtn.disabled = idx === 0;
       nextBtn.disabled = true;
       progress.textContent = `${idx + 1} / ${questions.length}`;
 
-      // Answer buttons
-      [3,4,5,6,7,8,9,10,11,12,13].forEach(n => {
-        const b = document.createElement('button');
-        b.textContent = n;
-        b.className = 'choice';
-        b.onclick = () => {
+      // create answer buttons 3–13
+      for (let n = 3; n <= 13; n++) {
+        const btn = document.createElement('button');
+        btn.textContent = n;
+        btn.className = 'choice';
+        btn.onclick = () => {
           if (n === questions[idx]) {
             alert('✔️ Correct!');
           } else {
@@ -120,58 +118,61 @@
           }
           nextBtn.disabled = false;
         };
-        choices.appendChild(b);
-      });
+        choices.appendChild(btn);
+      }
 
-      // Create moving dots
+      // create moving dots
       dots = [];
-      for (let i = 0, count = questions[idx]; i < count; i++) {
+      const count = questions[idx];
+      for (let i = 0; i < count; i++) {
         const d = document.createElement('div');
         d.className = 'dot';
-        // random start
-        const ang = Math.random() * 2 * Math.PI;
-        const rad = Math.random() * (140 - 10);
-        d.x = 140 + rad * Math.cos(ang);
-        d.y = 140 + rad * Math.sin(ang);
+        // random start position inside circle
+        const angle = Math.random() * 2 * Math.PI;
+        const radius = Math.random() * (140 - 10);
+        d.x = 150 + radius * Math.cos(angle);
+        d.y = 150 + radius * Math.sin(angle);
         // random velocity
-        const sp = 40 + Math.random() * 40;
-        const dir= Math.random() * 2 * Math.PI;
-        d.vx = Math.cos(dir) * sp;
-        d.vy = Math.sin(dir) * sp;
+        const speed = 40 + Math.random() * 40;
+        const dir   = Math.random() * 2 * Math.PI;
+        d.vx = Math.cos(dir) * speed;
+        d.vy = Math.sin(dir) * speed;
         circle.appendChild(d);
         dots.push(d);
       }
 
-      // Animate for 4s
-      start = null;
-      function frame(ts) {
-        if (!start) start = ts;
-        const elapsed = ts - start;
-        const delta   = Math.min(elapsed,4000) - (frame.last||0);
-        const dt      = delta / 1000;
+      // animate for 4 seconds
+      startTime = null;
+      function animate(ts) {
+        if (!startTime) startTime = ts;
+        const elapsed = ts - startTime;
+        const stepDelta = Math.min(elapsed, 4000) - (animate.lastTime || 0);
+        const dt = stepDelta / 1000;
         dots.forEach(d => {
           d.x += d.vx * dt;
           d.y += d.vy * dt;
-          // bounce off circle edge
-          const dx = d.x - 140, dy = d.y - 140;
-          if (Math.hypot(dx,dy) > 130) {
-            const norm = Math.hypot(dx,dy);
+          // bounce off edge
+          const dx = d.x - 150, dy = d.y - 150;
+          if (Math.hypot(dx, dy) > 140) {
+            const norm = Math.hypot(dx, dy);
             const nx = dx / norm, ny = dy / norm;
-            const proj = d.vx*nx + d.vy*ny;
-            d.vx -= 2*proj*nx;
-            d.vy -= 2*proj*ny;
-            d.x = 140 + nx*130;
-            d.y = 140 + ny*130;
+            const proj = d.vx * nx + d.vy * ny;
+            d.vx -= 2 * proj * nx;
+            d.vy -= 2 * proj * ny;
+            d.x = 150 + nx * 140;
+            d.y = 150 + ny * 140;
           }
-          d.style.transform = `translate(${d.x-9}px,${d.y-9}px)`;
+          d.style.transform = `translate(${d.x - 9}px,${d.y - 9}px)`;
         });
-        frame.last = Math.min(elapsed,4000);
-        if (elapsed < 4000) requestAnimationFrame(frame);
+        animate.lastTime = Math.min(elapsed, 4000);
+        if (elapsed < 4000) {
+          requestAnimationFrame(animate);
+        }
       }
-      requestAnimationFrame(frame);
+      requestAnimationFrame(animate);
     }
 
-    // Navigation
+    // navigation handlers
     prevBtn.onclick = () => {
       if (current > 0) {
         current--;
@@ -185,9 +186,13 @@
       }
     };
 
-    // Start
+    // initial load
     loadQuestion(0);
   </script>
+
+</body>
+</html>
+
 </body>
 </html>
 
