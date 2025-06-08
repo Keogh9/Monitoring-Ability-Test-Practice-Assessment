@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Monitoring Ability Practice</title>
+  <title>Monitoring Ability Practice (70 items)</title>
   <style>
     body {
       margin: 0;
@@ -54,6 +54,15 @@
       margin-bottom: 1.5rem;
       font-size: 0.9rem;
     }
+    #nav button {
+      background: none;
+      border: none;
+      color: #234;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+    }
+    #nav button:disabled { opacity: 0.3; cursor: default; }
   </style>
 </head>
 <body>
@@ -63,46 +72,43 @@
   <div id="choices"></div>
   <div id="nav">
     <button id="prevBtn" disabled>← Previous</button>
-    <span id="progress">1 / 20</span>
+    <span id="progress">1 / 70</span>
     <button id="nextBtn" disabled>Next →</button>
   </div>
 
   <script>
-    // 1) Your 50 configurations
+    // ─── 70 randomly generated dot‐counts between 3 and 13 ─────────────────────────
     const questions = [
-      4,6,3,5,2,12,7 9,3,5,7,3,9,12,
-      6,4,5,3,2,8,6,13,9,10,13,6,4,
-      6,5,4,3,2,9,5,11,13,8,6,
-      5,6,3,4,2,8,5,6,9,10,11,6
-       // ← followed by the 50 more:
-  3,4,5,6,7,8,9,10,11,12,13,
-  3,4,5,6,7,8,9,10,11,12,13,
-  3,4,5,6,7,8,9,10,11,12,13,
-  3,4,5,6,7,8,9,10,11,12,13,
-  3,4,5,6,7,8
+      13,4,3,7,6,6,5,4,13,11,
+      4,12,9,3,3,4,6,6,11,12,
+      3,11,6,13,11,9,6,10,12,7,
+      3,5,9,8,7,5,6,8,4,4,
+      9,4,8,8,12,7,3,10,11,4,
+      9,4,11,7,13,12,8,12,6,4,
+      3,13,6,7,4,6,4,9,7,10
     ];
+    // ──────────────────────────────────────────────────────────────────────────────
 
-    // 2) DOM refs
-    const circle  = document.getElementById('circle');
-    const choices = document.getElementById('choices');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const progress= document.getElementById('progress');
+    // DOM refs
+    const circle   = document.getElementById('circle');
+    const choices  = document.getElementById('choices');
+    const prevBtn  = document.getElementById('prevBtn');
+    const nextBtn  = document.getElementById('nextBtn');
+    const progress = document.getElementById('progress');
 
     let current = 0;
     let dots    = [];
     let start   = null;
 
     function loadQuestion(idx) {
-      // clear old
       circle.innerHTML = '';
       choices.innerHTML = '';
       prevBtn.disabled = idx === 0;
       nextBtn.disabled = true;
-      progress.textContent = `${idx+1} / ${questions.length}`;
+      progress.textContent = `${idx + 1} / ${questions.length}`;
 
-      // create answer buttons
-      [2,3,4,5,6].forEach(n => {
+      // Answer buttons
+      [3,4,5,6,7,8,9,10,11,12,13].forEach(n => {
         const b = document.createElement('button');
         b.textContent = n;
         b.className = 'choice';
@@ -117,60 +123,71 @@
         choices.appendChild(b);
       });
 
-      // build dots
+      // Create moving dots
       dots = [];
-      for (let i=0, count = questions[idx]; i<count; i++) {
+      for (let i = 0, count = questions[idx]; i < count; i++) {
         const d = document.createElement('div');
         d.className = 'dot';
-        // random position in circle
-        const ang = Math.random()*2*Math.PI;
-        const rad = Math.random()*(140-10);
-        d.x = 140 + rad*Math.cos(ang);
-        d.y = 140 + rad*Math.sin(ang);
+        // random start
+        const ang = Math.random() * 2 * Math.PI;
+        const rad = Math.random() * (140 - 10);
+        d.x = 140 + rad * Math.cos(ang);
+        d.y = 140 + rad * Math.sin(ang);
         // random velocity
-        const sp = 40 + Math.random()*40;
-        const dir= Math.random()*2*Math.PI;
-        d.vx = Math.cos(dir)*sp;
-        d.vy = Math.sin(dir)*sp;
+        const sp = 40 + Math.random() * 40;
+        const dir= Math.random() * 2 * Math.PI;
+        d.vx = Math.cos(dir) * sp;
+        d.vy = Math.sin(dir) * sp;
         circle.appendChild(d);
         dots.push(d);
       }
 
-      // animate 4s
+      // Animate for 4s
       start = null;
       function frame(ts) {
         if (!start) start = ts;
         const elapsed = ts - start;
         const delta   = Math.min(elapsed,4000) - (frame.last||0);
-        const dt = delta/1000;
+        const dt      = delta / 1000;
         dots.forEach(d => {
-          d.x += d.vx*dt; d.y += d.vy*dt;
-          // bounce
-          const dx = d.x-140, dy=d.y-140;
+          d.x += d.vx * dt;
+          d.y += d.vy * dt;
+          // bounce off circle edge
+          const dx = d.x - 140, dy = d.y - 140;
           if (Math.hypot(dx,dy) > 130) {
             const norm = Math.hypot(dx,dy);
-            const nx = dx/norm, ny=dy/norm;
+            const nx = dx / norm, ny = dy / norm;
             const proj = d.vx*nx + d.vy*ny;
-            d.vx -= 2*proj*nx; d.vy -= 2*proj*ny;
-            d.x = 140+nx*130; d.y = 140+ny*130;
+            d.vx -= 2*proj*nx;
+            d.vy -= 2*proj*ny;
+            d.x = 140 + nx*130;
+            d.y = 140 + ny*130;
           }
           d.style.transform = `translate(${d.x-9}px,${d.y-9}px)`;
         });
         frame.last = Math.min(elapsed,4000);
-        if (elapsed < 4000) {
-          requestAnimationFrame(frame);
-        }
+        if (elapsed < 4000) requestAnimationFrame(frame);
       }
       requestAnimationFrame(frame);
     }
 
-    // nav handlers
-    prevBtn.onclick = () => { if(current>0){ current--; loadQuestion(current);} };
-    nextBtn.onclick = () => { if(current<questions.length-1){ current++; loadQuestion(current);} };
+    // Navigation
+    prevBtn.onclick = () => {
+      if (current > 0) {
+        current--;
+        loadQuestion(current);
+      }
+    };
+    nextBtn.onclick = () => {
+      if (current < questions.length - 1) {
+        current++;
+        loadQuestion(current);
+      }
+    };
 
-    // first load
+    // Start
     loadQuestion(0);
   </script>
-
 </body>
 </html>
+
