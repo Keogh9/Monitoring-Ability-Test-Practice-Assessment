@@ -1,1 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitoring Ability Practice</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: #eef4f4;
+      color: #233238;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100vh;
+    }
+    h1 {
+      margin-top: 1rem;
+      font-weight: 500;
+      font-size: 1.6rem;
+    }
+    #circle {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: #86a9aa;
+      overflow: hidden;
+    }
+    .dot {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+    }
+    #choices {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .choice {
+      padding: 0.6rem 1rem;
+      background: #a0b8b9;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .choice:hover { opacity: 0.9; }
+    #nav {
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
 
+  <h1>How many objects did you see?</h1>
+  <div id="circle"></div>
+  <div id="choices"></div>
+  <div id="nav">
+    <button id="prevBtn" disabled>← Previous</button>
+    <span id="progress">1 / 20</span>
+    <button id="nextBtn" disabled>Next →</button>
+  </div>
+
+  <script>
+    // 1) Your 20 configurations
+    const questions = [
+      4,6,3,5,2,
+      6,4,5,3,2,
+      6,5,4,3,2,
+      5,6,3,4,2
+    ];
+
+    // 2) DOM refs
+    const circle  = document.getElementById('circle');
+    const choices = document.getElementById('choices');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const progress= document.getElementById('progress');
+
+    let current = 0;
+    let dots    = [];
+    let start   = null;
+
+    function loadQuestion(idx) {
+      // clear old
+      circle.innerHTML = '';
+      choices.innerHTML = '';
+      prevBtn.disabled = idx === 0;
+      nextBtn.disabled = true;
+      progress.textContent = `${idx+1} / ${questions.length}`;
+
+      // create answer buttons
+      [2,3,4,5,6].forEach(n => {
+        const b = document.createElement('button');
+        b.textContent = n;
+        b.className = 'choice';
+        b.onclick = () => {
+          if (n === questions[idx]) {
+            alert('✔️ Correct!');
+          } else {
+            alert(`❌ Nope. It was ${questions[idx]}.`);
+          }
+          nextBtn.disabled = false;
+        };
+        choices.appendChild(b);
+      });
+
+      // build dots
+      dots = [];
+      for (let i=0, count = questions[idx]; i<count; i++) {
+        const d = document.createElement('div');
+        d.className = 'dot';
+        // random position in circle
+        const ang = Math.random()*2*Math.PI;
+        const rad = Math.random()*(140-10);
+        d.x = 140 + rad*Math.cos(ang);
+        d.y = 140 + rad*Math.sin(ang);
+        // random velocity
+        const sp = 40 + Math.random()*40;
+        const dir= Math.random()*2*Math.PI;
+        d.vx = Math.cos(dir)*sp;
+        d.vy = Math.sin(dir)*sp;
+        circle.appendChild(d);
+        dots.push(d);
+      }
+
+      // animate 4s
+      start = null;
+      function frame(ts) {
+        if (!start) start = ts;
+        const elapsed = ts - start;
+        const delta   = Math.min(elapsed,4000) - (frame.last||0);
+        const dt = delta/1000;
+        dots.forEach(d => {
+          d.x += d.vx*dt; d.y += d.vy*dt;
+          // bounce
+          const dx = d.x-140, dy=d.y-140;
+          if (Math.hypot(dx,dy) > 130) {
+            const norm = Math.hypot(dx,dy);
+            const nx = dx/norm, ny=dy/norm;
+            const proj = d.vx*nx + d.vy*ny;
+            d.vx -= 2*proj*nx; d.vy -= 2*proj*ny;
+            d.x = 140+nx*130; d.y = 140+ny*130;
+          }
+          d.style.transform = `translate(${d.x-9}px,${d.y-9}px)`;
+        });
+        frame.last = Math.min(elapsed,4000);
+        if (elapsed < 4000) {
+          requestAnimationFrame(frame);
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // nav handlers
+    prevBtn.onclick = () => { if(current>0){ current--; loadQuestion(current);} };
+    nextBtn.onclick = () => { if(current<questions.length-1){ current++; loadQuestion(current);} };
+
+    // first load
+    loadQuestion(0);
+  </script>
+
+</body>
+</html>
